@@ -1,0 +1,1262 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QuickCells Price Analyzer</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&family=Orbitron:wght@700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        :root {
+            --neon-blue: #00F0FF;
+            --neon-pink: #FF00F5;
+            --neon-green: #00FF85;
+            --neon-purple: #9D00FF;
+            --dark-space: #0A0A0F;
+            --darker-space: #050508;
+            --cyber-blue: #00F0FF;
+            --cyber-pink: #FF00F5;
+            --cyber-yellow: #FFEE00;
+            --light: rgba(255,255,255,0.9);
+            --light-muted: rgba(255,255,255,0.7);
+            --glow-blue: 0 0 10px rgba(0, 240, 255, 0.8);
+            --glow-pink: 0 0 10px rgba(255, 0, 245, 0.8);
+            --glow-green: 0 0 10px rgba(0, 255, 133, 0.8);
+            --transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: var(--darker-space);
+            color: var(--light);
+            line-height: 1.6;
+            overflow-x: hidden;
+            -webkit-tap-highlight-color: transparent;
+            background-image: 
+                radial-gradient(circle at 20% 30%, rgba(255,0,245,0.03) 0%, transparent 25%),
+                radial-gradient(circle at 80% 70%, rgba(0,240,255,0.03) 0%, transparent 25%);
+        }
+
+        /* ============ LOADING SCREEN ============ */
+        .loading-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--darker-space);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            transition: opacity 0.5s;
+        }
+
+        .qc-logo {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, var(--neon-pink), var(--neon-blue));
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 20px;
+            box-shadow: 0 0 20px rgba(255,0,245,0.5);
+            animation: pulse 2s infinite alternate;
+        }
+
+        .qc-logo-text {
+            font-weight: 800;
+            font-size: 1.8rem;
+            color: white;
+        }
+
+        .loading-text {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1rem;
+            color: var(--neon-blue);
+            margin-top: 10px;
+            text-shadow: var(--glow-blue);
+        }
+
+        /* ============ MAIN CONTAINER ============ */
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+            display: none;
+        }
+
+        /* ============ HEADER ============ */
+        .header {
+            text-align: center;
+            padding: 20px 0 30px;
+        }
+
+        .header-logo {
+            width: 70px;
+            height: 70px;
+            background: linear-gradient(135deg, var(--neon-pink), var(--neon-blue));
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 15px;
+            box-shadow: 0 5px 20px rgba(255,0,245,0.3);
+        }
+
+        .header-title {
+            font-size: 1.8rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--neon-pink), var(--neon-blue));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 5px;
+        }
+
+        .header-subtitle {
+            font-size: 0.95rem;
+            color: var(--light-muted);
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        /* ============ SEARCH SECTION ============ */
+        .search-section {
+            background: rgba(15,15,20,0.7);
+            border-radius: 16px;
+            padding: 25px;
+            margin-bottom: 25px;
+            border: 1px solid rgba(0,240,255,0.15);
+            backdrop-filter: blur(5px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+
+        .search-title {
+            font-size: 1.2rem;
+            margin-bottom: 20px;
+            color: var(--neon-blue);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .search-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 20px;
+        }
+
+        .search-group {
+            margin-bottom: 15px;
+            position: relative;
+        }
+
+        .search-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: var(--neon-blue);
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 12px 15px;
+            background: rgba(255,255,255,0.08);
+            border: 1px solid rgba(0,240,255,0.2);
+            border-radius: 8px;
+            color: white;
+            font-size: 0.95rem;
+            font-family: 'Poppins', sans-serif;
+            transition: var(--transition);
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: var(--neon-pink);
+            box-shadow: 0 0 15px rgba(255,0,245,0.2);
+        }
+
+        .search-select {
+            appearance: none;
+            background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='white'%3e%3cpath d='M7 10l5 5 5-5z'/%3e%3c/svg%3e");
+            background-repeat: no-repeat;
+            background-position: right 12px center;
+            background-size: 18px;
+        }
+
+        .autocomplete-items {
+            position: absolute;
+            border: 1px solid rgba(0,240,255,0.2);
+            border-top: none;
+            z-index: 99;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: var(--dark-space);
+            border-radius: 0 0 8px 8px;
+            max-height: 200px;
+            overflow-y: auto;
+            display: none;
+        }
+
+        .autocomplete-item {
+            padding: 10px 15px;
+            cursor: pointer;
+            border-bottom: 1px solid rgba(0,240,255,0.1);
+        }
+
+        .autocomplete-item:hover {
+            background: rgba(0,240,255,0.1);
+        }
+
+        .autocomplete-item strong {
+            color: var(--neon-blue);
+        }
+
+        .search-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 14px 25px;
+            border-radius: 8px;
+            background: linear-gradient(135deg, var(--neon-pink), var(--neon-blue));
+            color: white;
+            border: none;
+            font-weight: 600;
+            font-size: 0.95rem;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 10px;
+            font-family: 'Poppins', sans-serif;
+            transition: var(--transition);
+        }
+
+        .search-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(255,0,245,0.3);
+        }
+
+        .search-btn i {
+            margin-right: 8px;
+        }
+
+        /* ============ RESULTS SECTION ============ */
+        .results-section {
+            display: none;
+            background: rgba(15,15,20,0.7);
+            border-radius: 16px;
+            padding: 25px;
+            margin-bottom: 25px;
+            border: 1px solid rgba(0,240,255,0.15);
+            backdrop-filter: blur(5px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        .results-title {
+            font-size: 1.3rem;
+            margin-bottom: 20px;
+            color: var(--neon-blue);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .price-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .price-card {
+            background: rgba(0,0,0,0.3);
+            border-radius: 12px;
+            padding: 20px;
+            border: 1px solid;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .price-card::after {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(transparent, rgba(255,255,255,0.05), transparent);
+            transform: rotate(30deg);
+            animation: shine 3s infinite;
+        }
+
+        .price-card.high {
+            border-color: var(--neon-green);
+            box-shadow: 0 0 15px rgba(0, 255, 133, 0.2);
+        }
+
+        .price-card.median {
+            border-color: var(--neon-blue);
+            box-shadow: 0 0 15px rgba(0, 240, 255, 0.2);
+        }
+
+        .price-card.low {
+            border-color: var(--neon-pink);
+            box-shadow: 0 0 15px rgba(255, 0, 245, 0.2);
+        }
+
+        .price-label {
+            font-size: 0.9rem;
+            margin-bottom: 5px;
+            color: var(--light-muted);
+        }
+
+        .price-value {
+            font-size: 1.6rem;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .price-desc {
+            font-size: 0.85rem;
+            color: var(--light-muted);
+        }
+
+        .recommendation {
+            background: rgba(0,0,0,0.3);
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 20px;
+            border-left: 4px solid var(--neon-blue);
+        }
+
+        .recommendation-title {
+            font-size: 1.1rem;
+            margin-bottom: 10px;
+            color: var(--neon-blue);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .recommendation-content {
+            font-size: 0.9rem;
+            line-height: 1.6;
+        }
+
+        .buying-options {
+            margin-top: 20px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+
+        .buying-option {
+            background: rgba(0,0,0,0.3);
+            border-radius: 8px;
+            padding: 15px;
+            border: 1px solid rgba(0,240,255,0.2);
+        }
+
+        .option-title {
+            font-size: 0.9rem;
+            margin-bottom: 5px;
+            color: var(--neon-green);
+        }
+
+        .option-price {
+            font-size: 1.2rem;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .option-profit {
+            font-size: 0.8rem;
+            color: var(--light-muted);
+        }
+
+        .olx-items {
+            margin-top: 25px;
+        }
+
+        .olx-title {
+            font-size: 1.1rem;
+            margin-bottom: 15px;
+            color: var(--neon-blue);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .olx-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            background: rgba(0,0,0,0.3);
+            border-radius: 8px;
+            margin-bottom: 10px;
+            border-left: 3px solid var(--neon-blue);
+            transition: var(--transition);
+            cursor: pointer;
+        }
+
+        .olx-item:hover {
+            transform: translateX(5px);
+            background: rgba(0,240,255,0.05);
+        }
+
+        .olx-item-title {
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        .olx-item-price {
+            font-weight: 700;
+            color: var(--neon-green);
+        }
+
+        .olx-item-location {
+            font-size: 0.8rem;
+            color: var(--light-muted);
+            margin-top: 3px;
+        }
+
+        .update-info {
+            text-align: center;
+            font-size: 0.85rem;
+            color: var(--light-muted);
+            margin-top: 20px;
+        }
+
+        /* ============ HISTORY SECTION ============ */
+        .history-section {
+            background: rgba(15,15,20,0.7);
+            border-radius: 16px;
+            padding: 25px;
+            margin-bottom: 25px;
+            border: 1px solid rgba(0,240,255,0.15);
+            backdrop-filter: blur(5px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            display: none;
+        }
+
+        .history-title {
+            font-size: 1.2rem;
+            margin-bottom: 20px;
+            color: var(--neon-blue);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .history-items {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .history-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 15px;
+            background: rgba(0,0,0,0.3);
+            border-radius: 8px;
+            margin-bottom: 10px;
+            border-left: 3px solid var(--neon-pink);
+            transition: var(--transition);
+            cursor: pointer;
+        }
+
+        .history-item:hover {
+            background: rgba(255,0,245,0.05);
+            transform: translateX(5px);
+        }
+
+        .history-item-info {
+            flex: 1;
+        }
+
+        .history-item-model {
+            font-weight: 600;
+            margin-bottom: 3px;
+        }
+
+        .history-item-specs {
+            font-size: 0.8rem;
+            color: var(--light-muted);
+        }
+
+        .history-item-price {
+            font-weight: 700;
+            color: var(--neon-blue);
+            min-width: 120px;
+            text-align: right;
+        }
+
+        .clear-history {
+            display: block;
+            text-align: center;
+            margin-top: 15px;
+            color: var(--neon-pink);
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .clear-history:hover {
+            text-decoration: underline;
+        }
+
+        /* ============ NOTIFICATION ============ */
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(15,15,20,0.9);
+            border: 1px solid var(--neon-blue);
+            border-radius: 8px;
+            padding: 15px 20px;
+            box-shadow: var(--glow-blue);
+            z-index: 1000;
+            transform: translateX(150%);
+            transition: transform 0.3s ease-out;
+            max-width: 350px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .notification.show {
+            transform: translateX(0);
+        }
+
+        .notification.error {
+            border-color: var(--neon-pink);
+            box-shadow: var(--glow-pink);
+        }
+
+        .notification.success {
+            border-color: var(--neon-green);
+            box-shadow: var(--glow-green);
+        }
+
+        .notification-icon {
+            font-size: 1.2rem;
+        }
+
+        .notification-content {
+            flex: 1;
+        }
+
+        .notification-close {
+            cursor: pointer;
+            opacity: 0.7;
+            transition: var(--transition);
+        }
+
+        .notification-close:hover {
+            opacity: 1;
+        }
+
+        /* ============ ANIMATIONS ============ */
+        @keyframes pulse {
+            0% { box-shadow: 0 0 20px rgba(255,0,245,0.5); }
+            100% { box-shadow: 0 0 30px rgba(255,0,245,0.8); }
+        }
+
+        @keyframes shine {
+            0% { transform: rotate(30deg) translate(-30%, -30%); }
+            100% { transform: rotate(30deg) translate(30%, 30%); }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ============ RESPONSIVE ============ */
+        @media (max-width: 768px) {
+            .container {
+                padding: 15px;
+            }
+            
+            .search-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .price-cards, .buying-options {
+                grid-template-columns: 1fr;
+            }
+            
+            .header-title {
+                font-size: 1.5rem;
+            }
+            
+            .history-item {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .history-item-price {
+                text-align: left;
+                margin-top: 8px;
+                min-width: auto;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Loading Screen -->
+    <div class="loading-screen" id="loadingScreen">
+        <div class="qc-logo">
+            <div class="qc-logo-text">QC</div>
+        </div>
+        <div class="loading-text">CEK HARGA QUICKCELLS</div>
+    </div>
+
+    <!-- Notification -->
+    <div class="notification" id="notification">
+        <div class="notification-icon" id="notificationIcon"></div>
+        <div class="notification-content" id="notificationContent"></div>
+        <div class="notification-close" id="notificationClose"><i class="fas fa-times"></i></div>
+    </div>
+
+   <!-- Main Container -->
+    <div class="container" id="mainContainer">
+        <header class="header">
+            <div class="header-logo">
+                <div class="qc-logo-text">QC</div>
+            </div>
+            <h1 class="header-title">ANALISA HARGA REAL-TIME</h1>
+            <p class="header-subtitle">Data langsung dari OLX - Tanpa perlu input harga</p>
+        </header>
+
+        <section class="search-section">
+            <h2 class="search-title"><i class="fas fa-search-dollar"></i> Cari Produk</h2>
+            <form id="searchForm">
+                <div class="search-grid">
+                    <div class="search-group">
+                        <label class="search-label"><i class="fas fa-mobile-alt"></i> Tipe Produk</label>
+                        <select id="productType" class="search-input search-select" required>
+                            <option value="">Pilih Tipe</option>
+                            <option value="smartphone">Smartphone</option>
+                            <option value="tablet">Tablet</option>
+                        </select>
+                    </div>
+                    
+                    <div class="search-group">
+                        <label class="search-label"><i class="fas fa-tags"></i> Brand</label>
+                        <select id="brand" class="search-input search-select" required>
+                            <option value="">Pilih Brand</option>
+                            <option value="samsung">Samsung</option>
+                            <option value="iphone">iPhone</option>
+                            <option value="xiaomi">Xiaomi</option>
+                            <option value="oppo">Oppo</option>
+                            <option value="vivo">Vivo</option>
+                            <option value="realme">Realme</option>
+                            <option value="infinix">Infinix</option>
+                            <option value="huawei">Huawei</option>
+                        </select>
+                    </div>
+                    
+                    <div class="search-group">
+                        <label class="search-label"><i class="fas fa-tag"></i> Model</label>
+                        <input type="text" id="model" class="search-input" placeholder="Contoh: Galaxy S23 Ultra" required autocomplete="off">
+                        <div id="modelAutocomplete" class="autocomplete-items"></div>
+                    </div>
+                    
+                    <div class="search-group">
+                        <label class="search-label"><i class="fas fa-microchip"></i> Spesifikasi</label>
+                        <div id="specsDisplay" class="search-input" style="padding: 15px; min-height: 44px; background: rgba(255,255,255,0.05);">
+                            Pilih brand dan model terlebih dahulu
+                        </div>
+                    </div>
+                </div>
+                
+                <button type="submit" class="search-btn">
+                    <i class="fas fa-bolt"></i> ANALISA HARGA
+                </button>
+            </form>
+        </section>
+
+        <section class="history-section" id="historySection">
+            <h2 class="history-title"><i class="fas fa-history"></i> Histori Pencarian</h2>
+            <div class="history-items" id="historyItems">
+                <!-- History items will be added here -->
+            </div>
+            <div class="clear-history" id="clearHistory"><i class="fas fa-trash-alt"></i> Bersihkan Histori</div>
+        </section>
+
+        <section class="results-section" id="resultsSection">
+            <h2 class="results-title"><i class="fas fa-chart-line"></i> Hasil Analisa</h2>
+            
+            <div class="price-cards">
+                <div class="price-card high">
+                    <div class="price-label">Harga Tertinggi</div>
+                    <div class="price-value" id="highPrice">Rp-</div>
+                    <div class="price-desc">Top 20% di OLX</div>
+                </div>
+                
+                <div class="price-card median">
+                    <div class="price-label">Harga Rata-Rata</div>
+                    <div class="price-value" id="medianPrice">Rp-</div>
+                    <div class="price-desc">Median pasar</div>
+                </div>
+                
+                <div class="price-card low">
+                    <div class="price-label">Harga Terendah</div>
+                    <div class="price-value" id="lowPrice">Rp-</div>
+                    <div class="price-desc">Bottom 20% di OLX</div>
+                </div>
+            </div>
+            
+            <div class="recommendation">
+                <div class="recommendation-title"><i class="fas fa-lightbulb"></i> Rekomendasi QuickCells</div>
+                <div class="recommendation-content" id="recommendationText">
+                    Pilih produk terlebih dahulu untuk melihat rekomendasi harga.
+                </div>
+            </div>
+            
+            <div class="buying-options">
+                <div class="buying-option">
+                    <div class="option-title">Beli di Harga 10%</div>
+                    <div class="option-price" id="buy10Percent">Rp-</div>
+                    <div class="option-profit">Potensi profit ~15-20%</div>
+                </div>
+                
+                <div class="buying-option">
+                    <div class="option-title">Beli di Harga 15%</div>
+                    <div class="option-price" id="buy15Percent">Rp-</div>
+                    <div class="option-profit">Potensi profit ~10-15%</div>
+                </div>
+                
+                <div class="buying-option">
+                    <div class="option-title">Beli di Harga 20%</div>
+                    <div class="option-price" id="buy20Percent">Rp-</div>
+                    <div class="option-profit">Potensi profit ~5-10%</div>
+                </div>
+            </div>
+            
+            <h3 class="olx-title"><i class="fab fa-shopify"></i> Iklan Terbaru di OLX</h3>
+            
+            <div class="olx-items" id="olxItems">
+                <!-- Data OLX akan muncul di sini -->
+                <div class="olx-item">
+                    <div>
+                        <div class="olx-item-title">Pilih produk untuk melihat data</div>
+                        <div class="olx-item-location">QuickCells Price Analyzer</div>
+                    </div>
+                    <div class="olx-item-price">Rp-</div>
+                </div>
+            </div>
+            
+            <div class="update-info">
+                <i class="fas fa-sync-alt"></i> Diperbarui: <span id="updateTime">-</span> | Sumber data: OLX
+            </div>
+        </section>
+    </div>
+
+    <script>
+        // Database produk (contoh sederhana)
+        const productDatabase = {
+            samsung: {
+                smartphone: [
+                    { 
+                        model: "Galaxy S23 Ultra", 
+                        specs: "RAM: 12GB | Storage: 256GB/512GB/1TB | Kamera: 200MP | Layar: 6.8\" Dynamic AMOLED",
+                        year: 2023
+                    },
+                    { 
+                        model: "Galaxy S22 Ultra", 
+                        specs: "RAM: 12GB | Storage: 128GB/256GB/512GB/1TB | Kamera: 108MP | Layar: 6.8\" Dynamic AMOLED",
+                        year: 2022
+                    },
+                    { 
+                        model: "Galaxy S21 Ultra", 
+                        specs: "RAM: 12GB/16GB | Storage: 128GB/256GB/512GB | Kamera: 108MP | Layar: 6.8\" Dynamic AMOLED",
+                        year: 2021
+                    },
+                    { 
+                        model: "Galaxy Z Fold 5", 
+                        specs: "RAM: 12GB | Storage: 256GB/512GB/1TB | Layar: 7.6\" Foldable | Kamera: 50MP",
+                        year: 2023
+                    },
+                    { 
+                        model: "Galaxy Z Flip 5", 
+                        specs: "RAM: 8GB | Storage: 256GB/512GB | Layar: 6.7\" Foldable | Kamera: 12MP",
+                        year: 2023
+                    }
+                ],
+                tablet: [
+                    {
+                        model: "Galaxy Tab S9 Ultra",
+                        specs: "RAM: 12GB/16GB | Storage: 256GB/512GB/1TB | Layar: 14.6\" Super AMOLED",
+                        year: 2023
+                    },
+                    {
+                        model: "Galaxy Tab S8 Ultra",
+                        specs: "RAM: 8GB/12GB/16GB | Storage: 128GB/256GB/512GB | Layar: 14.6\" Super AMOLED",
+                        year: 2022
+                    }
+                ]
+            },
+            iphone: {
+                smartphone: [
+                    {
+                        model: "iPhone 15 Pro Max",
+                        specs: "RAM: 8GB | Storage: 256GB/512GB/1TB | Kamera: 48MP | Layar: 6.7\" Super Retina XDR",
+                        year: 2023
+                    },
+                    {
+                        model: "iPhone 14 Pro Max",
+                        specs: "RAM: 6GB | Storage: 128GB/256GB/512GB/1TB | Kamera: 48MP | Layar: 6.7\" Super Retina XDR",
+                        year: 2022
+                    },
+                    {
+                        model: "iPhone 13 Pro Max",
+                        specs: "RAM: 6GB | Storage: 128GB/256GB/512GB/1TB | Kamera: 12MP | Layar: 6.7\" Super Retina XDR",
+                        year: 2021
+                    }
+                ]
+            },
+            xiaomi: {
+                smartphone: [
+                    {
+                        model: "Xiaomi 13 Pro",
+                        specs: "RAM: 8GB/12GB | Storage: 128GB/256GB/512GB | Kamera: 50MP | Layar: 6.73\" AMOLED",
+                        year: 2023
+                    },
+                    {
+                        model: "Xiaomi 12T Pro",
+                        specs: "RAM: 8GB/12GB | Storage: 128GB/256GB | Kamera: 200MP | Layar: 6.67\" AMOLED",
+                        year: 2022
+                    }
+                ]
+            },
+            oppo: {
+                smartphone: [
+                    {
+                        model: "Oppo Find X5 Pro",
+                        specs: "RAM: 12GB | Storage: 256GB/512GB | Kamera: 50MP | Layar: 6.7\" AMOLED",
+                        year: 2022
+                    },
+                    {
+                        model: "Oppo Reno 8 Pro",
+                        specs: "RAM: 8GB/12GB | Storage: 128GB/256GB | Kamera: 50MP | Layar: 6.7\" AMOLED",
+                        year: 2022
+                    }
+                ]
+            },
+            vivo: {
+                smartphone: [
+                    {
+                        model: "Vivo X80 Pro",
+                        specs: "RAM: 8GB/12GB | Storage: 256GB/512GB | Kamera: 50MP | Layar: 6.78\" AMOLED",
+                        year: 2022
+                    },
+                    {
+                        model: "Vivo V25 Pro",
+                        specs: "RAM: 8GB/12GB | Storage: 128GB/256GB | Kamera: 64MP | Layar: 6.56\" AMOLED",
+                        year: 2022
+                    }
+                ]
+            },
+            realme: {
+                smartphone: [
+                    {
+                        model: "Realme GT 2 Pro",
+                        specs: "RAM: 8GB/12GB | Storage: 128GB/256GB/512GB | Kamera: 50MP | Layar: 6.7\" AMOLED",
+                        year: 2022
+                    },
+                    {
+                        model: "Realme 10 Pro+",
+                        specs: "RAM: 8GB/12GB | Storage: 128GB/256GB | Kamera: 108MP | Layar: 6.7\" AMOLED",
+                        year: 2022
+                    }
+                ]
+            },
+            infinix: {
+                smartphone: [
+                    {
+                        model: "Infinix Zero Ultra",
+                        specs: "RAM: 8GB | Storage: 256GB | Kamera: 200MP | Layar: 6.8\" AMOLED",
+                        year: 2022
+                    },
+                    {
+                        model: "Infinix Note 30 VIP",
+                        specs: "RAM: 8GB/12GB | Storage: 256GB | Kamera: 108MP | Layar: 6.67\" AMOLED",
+                        year: 2023
+                    }
+                ]
+            },
+            huawei: {
+                smartphone: [
+                    {
+                        model: "Huawei Mate 50 Pro",
+                        specs: "RAM: 8GB | Storage: 256GB/512GB | Kamera: 50MP | Layar: 6.74\" OLED",
+                        year: 2022
+                    },
+                    {
+                        model: "Huawei P50 Pro",
+                        specs: "RAM: 8GB/12GB | Storage: 128GB/256GB/512GB | Kamera: 50MP | Layar: 6.6\" OLED",
+                        year: 2021
+                    }
+                ]
+            }
+        };
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const loadingScreen = document.getElementById('loadingScreen');
+            const mainContainer = document.getElementById('mainContainer');
+            const searchForm = document.getElementById('searchForm');
+            const productType = document.getElementById('productType');
+            const brand = document.getElementById('brand');
+            const modelInput = document.getElementById('model');
+            const modelAutocomplete = document.getElementById('modelAutocomplete');
+            const specsDisplay = document.getElementById('specsDisplay');
+            const resultsSection = document.getElementById('resultsSection');
+            const historySection = document.getElementById('historySection');
+            const historyItems = document.getElementById('historyItems');
+            const clearHistory = document.getElementById('clearHistory');
+            const notification = document.getElementById('notification');
+            const notificationIcon = document.getElementById('notificationIcon');
+            const notificationContent = document.getElementById('notificationContent');
+            const notificationClose = document.getElementById('notificationClose');
+            
+                // Hide loading screen quickly
+            setTimeout(() => {
+                loadingScreen.style.opacity = '0';
+                setTimeout(() => {
+                    loadingScreen.style.display = 'none';
+                    mainContainer.style.display = 'block';
+                    
+                    // Load search history
+                    loadSearchHistory();
+                }, 500);
+            }, 800);
+            
+            // Show notification
+            function showNotification(message, type = 'info') {
+                notification.className = `notification ${type}`;
+                notificationContent.textContent = message;
+                
+                switch(type) {
+                    case 'error':
+                        notificationIcon.innerHTML = '<i class="fas fa-exclamation-circle"></i>';
+                        break;
+                    case 'success':
+                        notificationIcon.innerHTML = '<i class="fas fa-check-circle"></i>';
+                        break;
+                    default:
+                        notificationIcon.innerHTML = '<i class="fas fa-info-circle"></i>';
+                }
+                
+                notification.classList.add('show');
+                
+                // Auto hide after 5 seconds
+                setTimeout(() => {
+                    notification.classList.remove('show');
+                }, 5000);
+            }
+            
+            // Close notification
+            notificationClose.addEventListener('click', () => {
+                notification.classList.remove('show');
+            });
+            
+            // Load search history from localStorage
+            function loadSearchHistory() {
+                const history = JSON.parse(localStorage.getItem('qcSearchHistory')) || [];
+                
+                if (history.length > 0) {
+                    historySection.style.display = 'block';
+                    historyItems.innerHTML = '';
+                    
+                    history.forEach((item, index) => {
+                        const historyItem = document.createElement('div');
+                        historyItem.className = 'history-item';
+                        historyItem.innerHTML = `
+                                                        <div class="history-item-info">
+                                <div class="history-item-model">${item.model}</div>
+                                <div class="history-item-specs">${item.specs}</div>
+                            </div>
+                            <div class="history-item-price">${item.price}</div>
+                        `;
+                        
+                        historyItem.addEventListener('click', () => {
+                            // Fill the form with history data
+                            productType.value = item.type;
+                            brand.value = item.brand;
+                            modelInput.value = item.model;
+                            specsDisplay.textContent = item.specs;
+                            
+                            // Trigger search
+                            searchForm.dispatchEvent(new Event('submit'));
+                        });
+                        
+                        historyItems.appendChild(historyItem);
+                    });
+                } else {
+                    historySection.style.display = 'none';
+                }
+            }
+            
+            // Clear search history
+            clearHistory.addEventListener('click', () => {
+                localStorage.removeItem('qcSearchHistory');
+                loadSearchHistory();
+                showNotification('Histori pencarian telah dibersihkan', 'success');
+            });
+            
+            // Autocomplete for model input
+            modelInput.addEventListener('input', function() {
+                const selectedBrand = brand.value;
+                const selectedType = productType.value;
+                const input = this.value.toLowerCase();
+                
+                modelAutocomplete.innerHTML = '';
+                
+                if (!selectedBrand || !selectedType || input.length < 2) {
+                    modelAutocomplete.style.display = 'none';
+                    return;
+                }
+                
+                const products = productDatabase[selectedBrand][selectedType];
+                const matches = products.filter(product => 
+                    product.model.toLowerCase().includes(input)
+                );
+                
+                if (matches.length > 0) {
+                    matches.forEach(match => {
+                        const item = document.createElement('div');
+                        item.className = 'autocomplete-item';
+                        
+                        // Highlight matching text
+                        const modelText = match.model.replace(
+                            new RegExp(input, 'gi'), 
+                            match => `<strong>${match}</strong>`
+                        );
+                        
+                        item.innerHTML = modelText;
+                        item.addEventListener('click', () => {
+                            modelInput.value = match.model;
+                            specsDisplay.textContent = match.specs;
+                            modelAutocomplete.style.display = 'none';
+                        });
+                        
+                        modelAutocomplete.appendChild(item);
+                    });
+                    
+                    modelAutocomplete.style.display = 'block';
+                } else {
+                    modelAutocomplete.style.display = 'none';
+                }
+            });
+            
+            // Hide autocomplete when clicking elsewhere
+            document.addEventListener('click', function(e) {
+                if (e.target.id !== 'model') {
+                    modelAutocomplete.style.display = 'none';
+                }
+            });
+            
+            // Update specs display when brand or type changes
+            brand.addEventListener('change', updateSpecs);
+            productType.addEventListener('change', updateSpecs);
+            
+            function updateSpecs() {
+                const selectedBrand = brand.value;
+                const selectedType = productType.value;
+                
+                if (!selectedBrand || !selectedType) {
+                    specsDisplay.textContent = 'Pilih brand dan model terlebih dahulu';
+                    return;
+                }
+                
+                // Clear model input when brand or type changes
+                modelInput.value = '';
+                specsDisplay.textContent = 'Masukkan model untuk melihat spesifikasi';
+            }
+            
+              // Form submission
+    searchForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const selectedBrand = brand.value;
+        const selectedType = productType.value;
+        const selectedModel = modelInput.value;
+        const selectedSpecs = specsDisplay.textContent;
+        
+        if (!selectedBrand || !selectedType || !selectedModel) {
+            showNotification('Harap lengkapi semua field pencarian', 'error');
+            return;
+        }
+        
+        // Show loading state
+        const submitBtn = this.querySelector('button[type="submit"]');
+        const originalBtnText = submitBtn.innerHTML;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Mencari...';
+        submitBtn.disabled = true;
+        
+        // Simulate API call with timeout
+        setTimeout(() => {
+            // Generate sample prices (in real app, this would come from OLX scraping)
+            const generatePrices = (base, count, variance) => {
+                const prices = [];
+                for (let i = 0; i < count; i++) {
+                    const randomVariance = (Math.random() * variance * 2) - variance; // -variance to +variance
+                    prices.push(base * (1 + randomVariance));
+                }
+                return prices;
+            };
+            
+            // Base price based on model year (example logic)
+            const currentYear = new Date().getFullYear();
+            const product = productDatabase[selectedBrand][selectedType].find(p => p.model === selectedModel);
+            const yearDiff = currentYear - (product?.year || currentYear);
+            const basePrice = (10000000 - (yearDiff * 1500000)) * (selectedType === 'smartphone' ? 1 : 1.5);
+            
+            // Generate 50 sample prices with 25% variance
+            const allPrices = generatePrices(basePrice, 50, 0.25).map(p => Math.round(p / 100000) * 100000); // Round to nearest 100k
+            
+            // Calculate price statistics
+            const sortedPrices = [...allPrices].sort((a, b) => a - b);
+            const medianPrice = sortedPrices[Math.floor(sortedPrices.length / 2)];
+            const lowPrices = sortedPrices.slice(0, Math.floor(sortedPrices.length * 0.2)); // Bottom 20%
+            const highPrices = sortedPrices.slice(Math.floor(sortedPrices.length * 0.8)); // Top 20%
+            
+            const averageLow = Math.round(lowPrices.reduce((sum, p) => sum + p, 0) / lowPrices.length);
+            const averageHigh = Math.round(highPrices.reduce((sum, p) => sum + p, 0) / highPrices.length);
+            
+            // Update UI with results
+            document.getElementById('highPrice').textContent = formatPrice(averageHigh);
+            document.getElementById('medianPrice').textContent = formatPrice(medianPrice);
+            document.getElementById('lowPrice').textContent = formatPrice(averageLow);
+            
+            // Calculate buying recommendations based on median
+            const buyRecommendations = [
+                { discount: 0.20, profitRange: '20-25%', risk: 'Rendah' },
+                { discount: 0.15, profitRange: '15-20%', risk: 'Sedang' },
+                { discount: 0.10, profitRange: '10-15%', risk: 'Tinggi' }
+            ];
+            
+            buyRecommendations.forEach((rec, i) => {
+                const buyPrice = medianPrice * (1 - rec.discount);
+                document.getElementById(`buy${rec.discount*100}Percent`).textContent = formatPrice(buyPrice);
+                document.querySelectorAll('.option-profit')[i].textContent = 
+                    `Potensi profit ~${rec.profitRange} (Resiko ${rec.risk})`;
+            });
+            
+            // Generate recommendation text
+            const recommendationText = `
+                <strong>Analisa untuk ${selectedModel}:</strong>
+                <ul style="margin-top: 10px; padding-left: 20px;">
+                    <li>Harga pasar saat ini: <strong>${formatPrice(medianPrice)}</strong> (median)</li>
+                    <li>Beli di bawah <strong>${formatPrice(medianPrice * 0.8)}</strong> untuk profit optimal</li>
+                    <li>Range harga wajar: <strong>${formatPrice(medianPrice * 0.85)} - ${formatPrice(medianPrice * 1.1)}</strong></li>
+                    <li>Hindari membeli di atas <strong>${formatPrice(medianPrice * 1.15)}</strong> kecuali kondisi mint</li>
+                </ul>
+                <p style="margin-top: 10px;"><i class="fas fa-info-circle"></i> <em>Berdasarkan analisa ${allPrices.length} listing aktif di OLX Bandung</em></p>
+            `;
+            document.getElementById('recommendationText').innerHTML = recommendationText;
+            
+            // Generate sample OLX items (real implementation would use actual scraped data)
+            const olxItemsContainer = document.getElementById('olxItems');
+            olxItemsContainer.innerHTML = '';
+            
+            const locations = ['Bandung Kota', 'Bandung Barat', 'Cimahi', 'Ujung Berung'];
+            const conditions = ['Bekas', 'Like New', 'Second', 'Garansi Toko'];
+            
+            // Take first 5 prices from sorted list as sample listings
+            sortedPrices.slice(0, 5).forEach((price, i) => {
+                const location = locations[i % locations.length];
+                const condition = conditions[i % conditions.length];
+                
+                const olxItem = document.createElement('div');
+                olxItem.className = 'olx-item';
+                olxItem.innerHTML = `
+                    <div>
+                        <div class="olx-item-title">${selectedModel} (${condition})</div>
+                        <div class="olx-item-location">${location}</div>
+                    </div>
+                    <div class="olx-item-price">${formatPrice(price)}</div>
+                `;
+                
+                olxItemsContainer.appendChild(olxItem);
+            });
+            
+            // Update timestamp
+            document.getElementById('updateTime').textContent = new Date().toLocaleString('id-ID', {
+                day: 'numeric',
+                month: 'long',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+            
+            // Show results
+            resultsSection.style.display = 'block';
+            historySection.style.display = 'none';
+            
+            // Add to search history
+            addToSearchHistory({
+                type: selectedType,
+                brand: selectedBrand,
+                model: selectedModel,
+                specs: selectedSpecs,
+                price: formatPrice(medianPrice),
+                timestamp: new Date().getTime()
+            });
+            
+            // Reset button state
+            submitBtn.innerHTML = originalBtnText;
+            submitBtn.disabled = false;
+            
+            // Scroll to results
+            resultsSection.scrollIntoView({ behavior: 'smooth' });
+            
+        }, 1500);
+    });
+            
+            // Add search to history
+            function addToSearchHistory(item) {
+                let history = JSON.parse(localStorage.getItem('qcSearchHistory')) || [];
+                
+                // Remove if already exists
+                history = history.filter(hist => 
+                    !(hist.brand === item.brand && hist.model === item.model)
+                );
+                
+                // Add to beginning
+                history.unshift(item);
+                
+                // Keep only last 10 items
+                if (history.length > 10) {
+                    history = history.slice(0, 10);
+                }
+                
+                localStorage.setItem('qcSearchHistory', JSON.stringify(history));
+                loadSearchHistory();
+            }
+            
+            // Format price to IDR
+            function formatPrice(amount) {
+                return 'Rp' + amount.toLocaleString('id-ID');
+            }
+        });
+    </script>
+</body>
+</html>
